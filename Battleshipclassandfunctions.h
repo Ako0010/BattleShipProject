@@ -133,4 +133,9 @@ public:
         return false;
     }
 
+    bool isAlreadyAttacked(int row, int col) const {
+        return grid[row][col] == 'X' || grid[row][col] == 'M';
+    }
+
 };
+

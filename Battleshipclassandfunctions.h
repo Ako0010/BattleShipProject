@@ -139,3 +139,98 @@ public:
 
 };
 
+
+class Player {
+private:
+    Board board;
+    string name;
+    ShipType currentShipType;
+    int cursorRow, cursorCol;
+    char orientation;
+    bool attackedPositions[BOARD_SIZE][BOARD_SIZE];
+
+public:
+    Player(string playerName) : name(playerName), currentShipType(SINGLE), cursorRow(0), cursorCol(0), orientation(HORIZONTAL) {
+        for (int i = 0; i < BOARD_SIZE; ++i) {
+            for (int j = 0; j < BOARD_SIZE; ++j) {
+                attackedPositions[i][j] = false;
+            }
+        }
+    }
+
+    Board& getBoard() {
+        return board;
+    }
+
+    string getName() const {
+        return name;
+    }
+
+    void changeShipType(char key) {
+        if (key == 'Q') currentShipType = SINGLE;
+        else if (key == 'E') currentShipType = DOUBLE;
+        else if (key == 'R') currentShipType = TRIPLE;
+    }
+
+    void toggleOrientation() {
+        orientation = (orientation == HORIZONTAL) ? VERTICAL : HORIZONTAL;
+    }
+
+    void placeShips() {
+        int shipsToPlace[3] = { 2, 2, 2 };
+        int currentShipIndex = 0;
+
+        while (currentShipIndex < 6) {
+            currentShipType = (currentShipIndex < 2) ? SINGLE : (currentShipIndex < 4) ? DOUBLE : TRIPLE;
+            if (shipsToPlace[currentShipType - 1] == 0) {
+                currentShipIndex++;
+                continue;
+            }
+
+            while (true) {
+                system("cls");
+                cout << name << ", place your ships (" << (6 - currentShipIndex) << " left)." << endl;
+                cout << "Arrow keys: Move | Space: Toggle orientation | Enter: Place ship" << endl;
+                cout << "Q: Single | E: Double | R: Triple" << endl;
+                cout << "Current ship: ";
+                if (currentShipType == SINGLE) cout << "SINGLE (1-cell)";
+                else if (currentShipType == DOUBLE) cout << "DOUBLE (2-cells)";
+                else cout << "TRIPLE (3-cells)";
+                cout << " | Orientation: " << (orientation == HORIZONTAL ? "Horizontal" : "Vertical") << endl;
+
+                board.display(false, cursorRow, cursorCol, 'S');
+
+                char key = _getch();
+                if (key == 'W' || key == 'w') {
+                    if (cursorRow > 0) cursorRow--;
+                }
+                else if (key == 'S' || key == 's') {
+                    if (cursorRow < BOARD_SIZE - 1) cursorRow++;
+                }
+                else if (key == 'A' || key == 'a') {
+                    if (cursorCol > 0) cursorCol--;
+                }
+                else if (key == 'D' || key == 'd') {
+                    if (cursorCol < BOARD_SIZE - 1) cursorCol++;
+                }
+                else if (key == ' ') {
+                    toggleOrientation();
+                }
+                else if (key == '\r') {
+                    if (board.placeShip(cursorRow, cursorCol, currentShipType, orientation)) {
+                        shipsToPlace[currentShipType - 1]--;
+                        currentShipIndex++;
+                        break;
+                    }
+                    else {
+                        cout << "Invalid placement (ships cannot be adjacent). Try again." << endl;
+                        system("pause");
+                    }
+                }
+                else if (key == 'Q' || key == 'E' || key == 'R') {
+                    changeShipType(key);
+                }
+            }
+        }
+    }
+};

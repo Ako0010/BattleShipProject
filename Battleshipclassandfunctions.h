@@ -388,3 +388,137 @@ public:
 
 
 };
+
+void displayMenu() {
+    int selectedOption = 0;
+    const int totalOptions = 3;
+
+    while (true) {
+        system("cls");
+        cout << "=== Battleship Menu ===\n";
+        cout << (selectedOption == 0 ? "1. Start Game <-" : "1. Start Game   ") << "\n";
+        cout << (selectedOption == 1 ? "2. Promo Code <-" : "2. Promo Code   ") << "\n";
+        cout << (selectedOption == 2 ? "3. Exit <-" : "3. Exit   ") << "\n";
+
+        char key = _getch();
+        if (key == 'W' || key == 'w') {
+            selectedOption = (selectedOption - 1 + totalOptions) % totalOptions;
+        }
+        else if (key == 'S' || key == 's') {
+            selectedOption = (selectedOption + 1) % totalOptions;
+        }
+
+        else if (key == '\r') {
+            if (selectedOption == 0) {
+                int gameMode = 0;
+                while (true) {
+                    system("cls");
+                    cout << "Select Game Mode:\n";
+                    cout << "1. Player vs Player" << (gameMode == 0 ? " <-" : "   ") << "\n";
+                    cout << "2. Computer vs Computer" << (gameMode == 1 ? " <-" : "   ") << "\n";
+                    cout << "3. Player vs Computer" << (gameMode == 2 ? " <-" : "   ") << "\n";
+
+
+                    key = _getch();
+                    if (key == 'W' || key == 'w') {
+                        gameMode = (gameMode - 1 + 3) % 3;
+                    }
+                    else if (key == 'S' || key == 's') {
+                        gameMode = (gameMode + 1) % 3;
+                    }
+
+
+                    else if (key == '\r') {
+                        if (gameMode == 0) {
+                            Player player1("Player 1");
+                            Player player2("Player 2");
+                            player1.placeShips();
+                            player2.placeShips();
+
+                            while (true) {
+                                player1.attackEnemy(player2.getBoard());
+                                if (player2.getBoard().allShipsSunk()) {
+                                    system("cls");
+                                    cout << "Player 1 wins!\n";
+                                    system("pause");
+                                    break;
+                                }
+                                player2.attackEnemy(player1.getBoard());
+                                if (player1.getBoard().allShipsSunk()) {
+                                    system("cls");
+                                    cout << "Player 2 wins!\n";
+                                    system("pause");
+                                    break;
+                                }
+                            }
+                        }
+                        else if (gameMode == 1) {
+                            ComputerPlayer computer1("Computer 1");
+                            ComputerPlayer computer2("Computer 2");
+                            computer1.placeShips(false);
+                            computer2.placeShips(false);
+
+                            while (true) {
+                                system("cls");
+                                cout << "Computer 1's Board:\n";
+                                computer1.getBoard().display(true);
+                                cout << "\nComputer 2's Board:\n";
+                                computer2.getBoard().display(true);
+                                computer1.attackEnemy(computer2.getBoard());
+                                if (computer2.getBoard().allShipsSunk()) {
+                                    cout << "Computer 1 wins!\n";
+                                    system("pause");
+                                    break;
+                                }
+                                system("cls");
+                                cout << "Computer 1's Board:\n";
+                                computer1.getBoard().display(true);
+                                cout << "\nComputer 2's Board:\n";
+                                computer2.getBoard().display(true);
+                                computer2.attackEnemy(computer1.getBoard());
+                                if (computer1.getBoard().allShipsSunk()) {
+                                    cout << "Computer 2 wins!\n";
+                                    system("pause");
+                                    break;
+                                }
+                            }
+                        }
+                        else if (gameMode == 2) {
+                            Player player("Player");
+                            ComputerPlayer computer("Computer");
+                            player.placeShips();
+                            computer.placeShips(gameMode);
+
+                            while (true) {
+                                computer.getBoard().display(true);
+                                player.attackEnemy(computer.getBoard());
+                                if (computer.getBoard().allShipsSunk()) {
+                                    system("cls");
+                                    cout << "Player wins!\n";
+                                    system("pause");
+                                    break;
+                                }
+                                computer.attackEnemy(player.getBoard());
+                                if (player.getBoard().allShipsSunk()) {
+                                    system("cls");
+                                    cout << "Computer wins!\n";
+                                    system("pause");
+                                    break;
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+            else if (selectedOption == 1) {
+                cout << "Promo code feature coming soon!\n";
+                system("pause");
+            }
+            else if (selectedOption == 2) {
+                cout << "Exiting game. Goodbye!\n";
+                break;
+            }
+        }
+    }
+}

@@ -1,7 +1,7 @@
 #include <iostream>
-#include <conio.h>
-#include <thread>  
-#include <chrono>
+#include <conio.h> // getch funskiyasina gore istifade
+#include <thread>  // vaxta gore istifade
+#include <chrono> // vaxta gore istifade
 using namespace std;
 #include "Battleshipclassandfunctions.h"
 

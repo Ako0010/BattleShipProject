@@ -233,4 +233,158 @@ public:
             }
         }
     }
+
+    virtual bool attackEnemy(Board& enemyBoard) {
+        while (true) {
+            system("cls");
+            cout << name << "'s Board:\n";
+            board.display(true);
+            cout << "\n" << name << ", attack " << "Opponent's Board:\n";
+            enemyBoard.display(true, cursorRow, cursorCol, 'A');
+
+            char key = _getch();
+            if (key == 'W' || key == 'w') {
+                if (cursorRow > 0) cursorRow--;
+            }
+            else if (key == 'S' || key == 's') {
+                if (cursorRow < BOARD_SIZE - 1) cursorRow++;
+            }
+            else if (key == 'A' || key == 'a') {
+                if (cursorCol > 0) cursorCol--;
+            }
+            else if (key == 'D' || key == 'd') {
+                if (cursorCol < BOARD_SIZE - 1) cursorCol++;
+            }
+            else if (key == ' ') {
+                if (attackedPositions[cursorRow][cursorCol]) {
+                    cout << "You've already attacked this position. Please choose a different one.\n";
+                    system("pause");
+                    continue;
+                }
+
+                bool hit = enemyBoard.attack(cursorRow, cursorCol);
+                cout << (hit ? "Hit!" : "Miss!") << endl;
+                attackedPositions[cursorRow][cursorCol] = true;
+
+                system("pause");
+                return hit;
+            }
+        }
+    }
+};
+
+
+class ComputerPlayer : public Player {
+public:
+    ComputerPlayer(string name) : Player(name) {}
+
+    void placeShips(int gameMode, bool silent = false) {
+        srand(time(0));
+        int shipsToPlace[3] = { 2, 2, 2 };
+        int currentShipIndex = 0;
+
+        while (currentShipIndex < 6) {
+            ShipType type = (currentShipIndex < 2) ? SINGLE : (currentShipIndex < 4) ? DOUBLE : TRIPLE;
+            if (shipsToPlace[type - 1] == 0) {
+                currentShipIndex++;
+                continue;
+            }
+
+            int row = rand() % BOARD_SIZE;
+            int col = rand() % BOARD_SIZE;
+            char orientation = (rand() % 2 == 0) ? 'H' : 'V';
+
+            if (!silent) {
+                if (gameMode == 1) {
+                    cout << getName() << " (Computer) is trying to place a ";
+                }
+                else {
+                    cout << getName() << " is trying to place a ";
+                }
+                cout << getName() << " is trying to place a ";
+                if (type == SINGLE) cout << "SINGLE";
+                else if (type == DOUBLE) cout << "DOUBLE";
+                else cout << "TRIPLE";
+                cout << " ship at (" << row + 1 << ", " << char('A' + col) << ") " << orientation << endl;
+            }
+
+            if (getBoard().placeShip(row, col, type, orientation)) {
+                shipsToPlace[type - 1]--;
+                currentShipIndex++;
+                if (!silent) {
+                    if (gameMode == 1) {
+                        cout << "Computer successfully placed ship at ";
+                    }
+                    else {
+                        cout << "Ship placed successfully at ";
+                    }
+                    cout << "Ship placed successfully at ";
+                    int length = static_cast<int>(type);
+                    for (int i = 0; i < length; i++) {
+                        if (orientation == 'H') {
+                            cout << "(" << row + 1 << ", " << char('A' + col + i) << ") ";
+                        }
+                        else {
+                            cout << "(" << row + 1 + i << ", " << char('A' + col) << ") ";
+                        }
+                    }
+                }
+
+                if (gameMode == 2) {
+                    if (!silent) {
+                        cout << "\nCurrent board (computer's ships hidden):\n";
+                        getBoard().display(true);
+                        cout << endl;
+                    }
+                }
+                else {
+                    if (!silent) {
+                        cout << "\nCurrent board (ships visible):\n";
+                        getBoard().display(false);
+                        cout << endl;
+                    }
+                }
+
+                this_thread::sleep_for(chrono::milliseconds(1500));
+                system("cls");
+            }
+            else if (!silent) {
+                cout << "Failed to place the ship. Current board:\n";
+                getBoard().display(true);
+                cout << "Trying again...\n\n";
+                this_thread::sleep_for(chrono::milliseconds(1000));
+            }
+        }
+
+        if (!silent) {
+            if (gameMode == 2) {
+                cout << getName() << " has finished placing all ships.\nFinal board (computer's ships hidden):\n";
+                getBoard().display(true);
+                cout << endl;
+            }
+            else {
+                cout << getName() << " has finished placing all ships.\nFinal board (ships visible):\n";
+                getBoard().display(false);
+                cout << endl;
+            }
+            this_thread::sleep_for(chrono::milliseconds(2000));
+        }
+
+    }
+
+    bool attackEnemy(Board& enemyBoard) override {
+        int row, col;
+        do {
+            row = rand() % BOARD_SIZE;
+            col = rand() % BOARD_SIZE;
+        } while (enemyBoard.isAlreadyAttacked(row, col));
+
+        cout << getName() << " attacks (" << row + 1 << ", " << char('A' + col) << ") ";
+        bool hit = enemyBoard.attack(row, col);
+        cout << (hit ? "Hit!" : "Miss!") << endl;
+        this_thread::sleep_for(chrono::milliseconds(1000));
+        return hit;
+    }
+
+
 };

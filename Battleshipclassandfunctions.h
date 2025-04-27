@@ -506,10 +506,6 @@ void displayMenu() {
                             computer1.placeShips(false);
                             computer2.placeShips(false);
 
-                            while (true) {
-                                if (_getch() == 27) {
-                                    break;
-                                }
                                 system("cls");
                                 cout << "Computer 1's Board:\n";
                                 computer1.getBoard().display(true);

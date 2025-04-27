@@ -1,7 +1,7 @@
 #pragma once
 
 const int BOARD_SIZE = 10;
-const char EMPTY_CELL = '.';
+const char EMPTY_CELL = '#';
 const char SHIP_CELL = 'S';
 const char HIT_CELL = 'X';
 const char MISS_CELL = 'M';
@@ -11,7 +11,8 @@ enum ShipType
 {
     SINGLE = 1,
     DOUBLE = 2,
-    TRIPLE = 3
+    TRIPLE = 3,
+	QUAD = 4,
 };
 
 enum Orientation
@@ -35,30 +36,47 @@ public:
     }
 
     void display(bool hideShips = true, int cursorRow = -1, int cursorCol = -1, char currentShip = ' ') const {
-        cout << "    ";
+        cout << "   ";
         for (int i = 0; i < BOARD_SIZE; i++) {
-            cout << char('A' + i) << " ";
+            cout << "  " << char('A' + i) << "";
         }
         cout << endl;
 
+        cout << "   " << char(254) << string(BOARD_SIZE * 3, char(254)) << char(254) << endl;
+
         for (int i = 0; i < BOARD_SIZE; i++) {
-            cout << (i + 1 < 10 ? " " : "") << i + 1 << " ";
+            cout << setw(2) << i + 1 << " " << char(221);
             for (int j = 0; j < BOARD_SIZE; j++) {
                 if (i == cursorRow && j == cursorCol) {
                     cout << "[" << currentShip << "]";
                 }
                 else {
-                    if (hideShips && grid[i][j] == SHIP_CELL) {
-                        cout << EMPTY_CELL << " ";
+                    char cell = grid[i][j];
+                    if (hideShips && cell == SHIP_CELL) {
+                        cell = EMPTY_CELL;
+                    }
+                    if (cell == SHIP_CELL) {
+                        cout << "\033[34m " << cell << " \033[0m";
+                    }
+                    else if (cell == 'X') {
+                        cout << "\033[31m " << cell << " \033[0m";
+                    }
+                    else if (cell == 'M') {
+                        cout << "\033[33m " << cell << " \033[0m";
                     }
                     else {
-                        cout << grid[i][j] << " ";
+                        cout << "\033[47m " << cell << " \033[0m";
                     }
+
                 }
             }
-            cout << endl;
+            cout << char(221) << endl;
         }
+
+        cout << "   " << char(254) << string(BOARD_SIZE * 3, char(254)) << char(254) << endl;
     }
+
+    
 
     bool placeShip(int row, int col, ShipType type, char orientation) {
         int length = static_cast<int>(type);
@@ -166,73 +184,85 @@ public:
         return name;
     }
 
-    void changeShipType(char key) {
-        if (key == 'Q') currentShipType = SINGLE;
-        else if (key == 'E') currentShipType = DOUBLE;
-        else if (key == 'R') currentShipType = TRIPLE;
-    }
 
     void toggleOrientation() {
         orientation = (orientation == HORIZONTAL) ? VERTICAL : HORIZONTAL;
     }
 
-    void placeShips() {
-        int shipsToPlace[3] = { 2, 2, 2 };
-        int currentShipIndex = 0;
+    void placeShips(bool autoPlace = false) {
 
-        while (currentShipIndex < 6) {
-            currentShipType = (currentShipIndex < 2) ? SINGLE : (currentShipIndex < 4) ? DOUBLE : TRIPLE;
-            if (shipsToPlace[currentShipType - 1] == 0) {
-                currentShipIndex++;
-                continue;
+        if (autoPlace) {
+            srand(time(0));
+            int shipsToPlace[4] = { 4, 3, 2, 1 };
+            int currentShipIndex = 0;
+
+            while (currentShipIndex < 10) {
+                ShipType type = (currentShipIndex < 4) ? SINGLE : (currentShipIndex < 7) ? DOUBLE : (currentShipIndex < 9) ? TRIPLE : QUAD;
+                if (shipsToPlace[type - 1] == 0) {
+                    currentShipIndex++;
+                    continue;
+                }
+
+                int row = rand() % BOARD_SIZE;
+                int col = rand() % BOARD_SIZE;
+                char orientation = (rand() % 2 == 0) ? 'H' : 'V';
+
+                if (board.placeShip(row, col, type, orientation)) {
+                    shipsToPlace[type - 1]--;
+                    currentShipIndex++;
+                }
             }
+        }
+        else {
+            int shipsToPlace[4] = { 4, 3, 2, 1 };
+            int currentShipIndex = 0;
 
-            while (true) {
-                system("cls");
-                cout << name << ", place your ships (" << (6 - currentShipIndex) << " left)." << endl;
-                cout << "Arrow keys: Move | Space: Toggle orientation | Enter: Place ship" << endl;
-                cout << "Q: Single | E: Double | R: Triple" << endl;
-                cout << "Current ship: ";
-                if (currentShipType == SINGLE) cout << "SINGLE (1-cell)";
-                else if (currentShipType == DOUBLE) cout << "DOUBLE (2-cells)";
-                else cout << "TRIPLE (3-cells)";
-                cout << " | Orientation: " << (orientation == HORIZONTAL ? "Horizontal" : "Vertical") << endl;
+            while (currentShipIndex < 10) {
+                currentShipType = (currentShipIndex < 4) ? SINGLE : (currentShipIndex < 7) ? DOUBLE : (currentShipIndex < 9) ? TRIPLE : QUAD;
+                if (shipsToPlace[currentShipType - 1] == 0) {
+                    currentShipIndex++;
+                    continue;
+                }
 
-                board.display(false, cursorRow, cursorCol, 'S');
+                while (true) {
+                    system("cls");
+                    cout << name << ", place your ships (" << (10 - currentShipIndex) << " left)." << endl;
+                    cout << " | Orientation: " << (orientation == HORIZONTAL ? "Horizontal" : "Vertical") << endl;
 
-                char key = _getch();
-                if (key == 'W' || key == 'w') {
-                    if (cursorRow > 0) cursorRow--;
-                }
-                else if (key == 'S' || key == 's') {
-                    if (cursorRow < BOARD_SIZE - 1) cursorRow++;
-                }
-                else if (key == 'A' || key == 'a') {
-                    if (cursorCol > 0) cursorCol--;
-                }
-                else if (key == 'D' || key == 'd') {
-                    if (cursorCol < BOARD_SIZE - 1) cursorCol++;
-                }
-                else if (key == ' ') {
-                    toggleOrientation();
-                }
-                else if (key == '\r') {
-                    if (board.placeShip(cursorRow, cursorCol, currentShipType, orientation)) {
-                        shipsToPlace[currentShipType - 1]--;
-                        currentShipIndex++;
-                        break;
+                    board.display(false, cursorRow, cursorCol, 'S');
+
+                    char key = _getch();
+                    if (key == 'W' || key == 'w') {
+                        if (cursorRow > 0) cursorRow--;
                     }
-                    else {
-                        cout << "Invalid placement (ships cannot be adjacent). Try again." << endl;
-                        system("pause");
+                    else if (key == 'S' || key == 's') {
+                        if (cursorRow < BOARD_SIZE - 1) cursorRow++;
                     }
-                }
-                else if (key == 'Q' || key == 'E' || key == 'R') {
-                    changeShipType(key);
+                    else if (key == 'A' || key == 'a') {
+                        if (cursorCol > 0) cursorCol--;
+                    }
+                    else if (key == 'D' || key == 'd') {
+                        if (cursorCol < BOARD_SIZE - 1) cursorCol++;
+                    }
+                    else if (key == ' ') {
+                        toggleOrientation();
+                    }
+                    else if (key == '\r') {
+                        if (board.placeShip(cursorRow, cursorCol, currentShipType, orientation)) {
+                            shipsToPlace[currentShipType - 1]--;
+                            currentShipIndex++;
+                            break;
+                        }
+                        else {
+                            cout << "Invalid placement (ships cannot be adjacent). Try again." << endl;
+                            system("pause");
+                        }
+                    }
                 }
             }
         }
     }
+    
 
     virtual bool attackEnemy(Board& enemyBoard) {
         while (true) {
@@ -280,11 +310,11 @@ public:
 
     void placeShips(int gameMode, bool silent = false) {
         srand(time(0));
-        int shipsToPlace[3] = { 2, 2, 2 };
+        int shipsToPlace[4] = { 4, 3, 2, 1 };
         int currentShipIndex = 0;
 
-        while (currentShipIndex < 6) {
-            ShipType type = (currentShipIndex < 2) ? SINGLE : (currentShipIndex < 4) ? DOUBLE : TRIPLE;
+        while (currentShipIndex < 10) {
+            ShipType type = (currentShipIndex < 4) ? SINGLE : (currentShipIndex < 7) ? DOUBLE : (currentShipIndex < 9) ? TRIPLE : QUAD;
             if (shipsToPlace[type - 1] == 0) {
                 currentShipIndex++;
                 continue;
@@ -293,41 +323,22 @@ public:
             int row = rand() % BOARD_SIZE;
             int col = rand() % BOARD_SIZE;
             char orientation = (rand() % 2 == 0) ? 'H' : 'V';
-
-            if (!silent) {
-                if (gameMode == 1) {
-                    cout << getName() << " (Computer) is trying to place a ";
-                }
-                else {
-                    cout << getName() << " is trying to place a ";
-                }
-                cout << getName() << " is trying to place a ";
-                if (type == SINGLE) cout << "SINGLE";
-                else if (type == DOUBLE) cout << "DOUBLE";
-                else cout << "TRIPLE";
-                cout << " ship at (" << row + 1 << ", " << char('A' + col) << ") " << orientation << endl;
-            }
-
             if (getBoard().placeShip(row, col, type, orientation)) {
                 shipsToPlace[type - 1]--;
                 currentShipIndex++;
+
                 if (!silent) {
                     if (gameMode == 1) {
-                        cout << "Computer successfully placed ship at ";
+                        cout << getName() << " (Computer) successfully placed a ";
                     }
                     else {
-                        cout << "Ship placed successfully at ";
+                        cout << getName() << " successfully placed a ";
                     }
-                    cout << "Ship placed successfully at ";
-                    int length = static_cast<int>(type);
-                    for (int i = 0; i < length; i++) {
-                        if (orientation == 'H') {
-                            cout << "(" << row + 1 << ", " << char('A' + col + i) << ") ";
-                        }
-                        else {
-                            cout << "(" << row + 1 + i << ", " << char('A' + col) << ") ";
-                        }
-                    }
+
+                    if (type == SINGLE) cout << "SINGLE";
+                    else if (type == DOUBLE) cout << "DOUBLE";
+                    else if (type == TRIPLE) cout << "TRIPLE";
+                    else cout << "QUAD";
                 }
 
                 if (gameMode == 2) {
@@ -348,11 +359,8 @@ public:
                 this_thread::sleep_for(chrono::milliseconds(1500));
                 system("cls");
             }
-            else if (!silent) {
-                cout << "Failed to place the ship. Current board:\n";
-                getBoard().display(true);
-                cout << "Trying again...\n\n";
-                this_thread::sleep_for(chrono::milliseconds(1000));
+            else {
+                continue;
             }
         }
 
@@ -382,7 +390,7 @@ public:
         cout << getName() << " attacks (" << row + 1 << ", " << char('A' + col) << ") ";
         bool hit = enemyBoard.attack(row, col);
         cout << (hit ? "Hit!" : "Miss!") << endl;
-        this_thread::sleep_for(chrono::milliseconds(1000));
+        this_thread::sleep_for(chrono::milliseconds(2000));
         return hit;
     }
 
@@ -391,14 +399,13 @@ public:
 
 void displayMenu() {
     int selectedOption = 0;
-    const int totalOptions = 3;
+    const int totalOptions = 2;
 
     while (true) {
         system("cls");
         cout << "=== Battleship Menu ===\n";
         cout << (selectedOption == 0 ? "1. Start Game <-" : "1. Start Game   ") << "\n";
-        cout << (selectedOption == 1 ? "2. Promo Code <-" : "2. Promo Code   ") << "\n";
-        cout << (selectedOption == 2 ? "3. Exit <-" : "3. Exit   ") << "\n";
+        cout << (selectedOption == 1 ? "2. Exit <-" : "2. Exit   ") << "\n";
 
         char key = _getch();
         if (key == 'W' || key == 'w') {
@@ -420,6 +427,9 @@ void displayMenu() {
 
 
                     key = _getch();
+                    if (key == 27) {
+                        break;
+                    }
                     if (key == 'W' || key == 'w') {
                         gameMode = (gameMode - 1 + 3) % 3;
                     }
@@ -430,24 +440,62 @@ void displayMenu() {
 
                     else if (key == '\r') {
                         if (gameMode == 0) {
-                            Player player1("Player 1");
-                            Player player2("Player 2");
-                            player1.placeShips();
-                            player2.placeShips();
+                            string player1Name = "Player 1";
+                            string player2Name = "Player 2";
+
+                            cout << "Player 1, do you want to set a custom name? (y/n): ";
+                            char setName1;
+                            cin >> setName1;
+                            if (setName1 == 'y' || setName1 == 'Y') {
+                                cout << "Enter name for Player 1: ";
+                                cin >> player1Name;
+                            }
+
+                            cout << "Player 2, do you want to set a custom name? (y/n): ";
+                            char setName2;
+                            cin >> setName2;
+                            if (setName2 == 'y' || setName2 == 'Y') {
+                                cout << "Enter name for Player 2: ";
+                                cin >> player2Name;
+                            }
+
+                            cout << "Does Player 1 want to auto-place ships? (y/n): ";
+                            char autoPlace1;
+                            cin >> autoPlace1;
+
+                            cout << "Does Player 2 want to auto-place ships? (y/n): ";
+                            char autoPlace2;
+                            cin >> autoPlace2;
+
+                            Player player1(player1Name);
+                            Player player2(player2Name);
+                            player1.placeShips(autoPlace1 == 'y' || autoPlace1 == 'Y');
+                            player2.placeShips(autoPlace2 == 'y' || autoPlace2 == 'Y');
 
                             while (true) {
-                                player1.attackEnemy(player2.getBoard());
+                                system("cls");
+                                cout << player1.getName() << "'s turn:" << endl;
+                                if (player1.attackEnemy(player2.getBoard())) {
+                                    cout << "Hit!" << endl;
+                                }
+                                else {
+                                    cout << "Miss!" << endl;
+                                }
                                 if (player2.getBoard().allShipsSunk()) {
-                                    system("cls");
-                                    cout << "Player 1 wins!\n";
-                                    system("pause");
+                                    cout << player1.getName() << " wins!" << endl;
                                     break;
                                 }
-                                player2.attackEnemy(player1.getBoard());
+
+                                system("cls");
+                                cout << player2.getName() << "'s turn:" << endl;
+                                if (player2.attackEnemy(player1.getBoard())) {
+                                    cout << "Hit!" << endl;
+                                }
+                                else {
+                                    cout << "Miss!" << endl;
+                                }
                                 if (player1.getBoard().allShipsSunk()) {
-                                    system("cls");
-                                    cout << "Player 2 wins!\n";
-                                    system("pause");
+                                    cout << player2.getName() << " wins!" << endl;
                                     break;
                                 }
                             }
@@ -459,6 +507,9 @@ void displayMenu() {
                             computer2.placeShips(false);
 
                             while (true) {
+                                if (_getch() == 27) {
+                                    break;
+                                }
                                 system("cls");
                                 cout << "Computer 1's Board:\n";
                                 computer1.getBoard().display(true);
@@ -484,6 +535,7 @@ void displayMenu() {
                             }
                         }
                         else if (gameMode == 2) {
+
                             Player player("Player");
                             ComputerPlayer computer("Computer");
                             player.placeShips();
@@ -512,10 +564,6 @@ void displayMenu() {
                 }
             }
             else if (selectedOption == 1) {
-                cout << "Promo code feature coming soon!\n";
-                system("pause");
-            }
-            else if (selectedOption == 2) {
                 cout << "Exiting game. Goodbye!\n";
                 break;
             }

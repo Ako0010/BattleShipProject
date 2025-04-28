@@ -296,7 +296,6 @@ public:
                 cout << (hit ? "Hit!" : "Miss!") << endl;
                 attackedPositions[cursorRow][cursorCol] = true;
 
-                system("pause");
                 return hit;
             }
         }
@@ -507,6 +506,9 @@ void displayMenu() {
                             computer2.placeShips(false);
 
                             while (true) {
+                                if (_kbhit() && _getch() == 27) {
+                                    break;
+                                }
                                 system("cls");
                                 cout << "Computer 1's Board:\n";
                                 computer1.getBoard().display(true);
@@ -547,6 +549,7 @@ void displayMenu() {
                                     system("pause");
                                     break;
                                 }
+
                                 computer.attackEnemy(player.getBoard());
                                 if (player.getBoard().allShipsSunk()) {
                                     system("cls");

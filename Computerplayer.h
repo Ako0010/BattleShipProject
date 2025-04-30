@@ -83,18 +83,53 @@ namespace Battleship
         }
 
         bool attackEnemy(Board& enemyBoard) override {
+            static vector<pair<int, int>> targets;
             int row, col;
 
             try {
-                do {
-                    row = rand() % BOARD_SIZE;
-                    col = rand() % BOARD_SIZE;
-                } while (enemyBoard.isAlreadyAttacked(row, col));
+                if (!targets.empty()) {
+                    row = targets.back().first;
+                    col = targets.back().second;
+                    targets.pop_back();
 
-                cout << getName() << " attacks (" << row + 1 << ", " << char('A' + col) << ") ";
+                    while (enemyBoard.isAlreadyAttacked(row, col) && !targets.empty()) {
+                        row = targets.back().first;
+                        col = targets.back().second;
+                        targets.pop_back();
+                    }
+
+                    if (enemyBoard.isAlreadyAttacked(row, col)) {
+                        do {
+                            row = rand() % BOARD_SIZE;
+                            col = rand() % BOARD_SIZE;
+                        } while (enemyBoard.isAlreadyAttacked(row, col));
+                    }
+                }
+                else {
+                    do {
+                        row = rand() % BOARD_SIZE;
+                        col = rand() % BOARD_SIZE;
+                    } while (enemyBoard.isAlreadyAttacked(row, col));
+                }
+
+                cout << getName() << " attacks the enemy (" << row + 1 << ", " << char('A' + col) << ") ";
                 bool hit = enemyBoard.attack(row, col);
                 cout << (hit ? "Hit!" : "Miss!") << endl;
                 this_thread::sleep_for(chrono::milliseconds(1500));
+
+                if (hit) {
+                    const int dr[] = { -1, 1, 0, 0 };
+                    const int dc[] = { 0, 0, -1, 1 };
+                    for (int i = 0; i < 4; ++i) {
+                        int newRow = row + dr[i];
+                        int newCol = col + dc[i];
+                        if (newRow >= 0 && newRow < BOARD_SIZE &&
+                            newCol >= 0 && newCol < BOARD_SIZE &&
+                            !enemyBoard.isAlreadyAttacked(newRow, newCol)) {
+                            targets.emplace_back(newRow, newCol);
+                        }
+                    }
+                }
 
                 return hit;
             }

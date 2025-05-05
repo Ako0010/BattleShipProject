@@ -80,7 +80,7 @@ namespace Battleship
                             board.display(false, cursorRow, cursorCol, 'S');
 
                             char key = _getch();
-                            if (key == 'W' || key == 'w') {
+                            if (key == 'W' || key == 'w') {    
                                 if (cursorRow > 0) cursorRow--;
                             }
                             else if (key == 'S' || key == 's') {

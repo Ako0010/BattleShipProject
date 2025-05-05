@@ -45,10 +45,10 @@ namespace Battleship
                             cout << "\033[34m " << cell << " \033[0m";
                         }
                         else if (cell == HIT_CELL) {
-                            cout << "\033[31m " << cell << " \033[0m";
+                            cout << "\033[32m " << cell << " \033[0m";
                         }
                         else if (cell == MISS_CELL) {
-                            cout << "\033[33m " << cell << " \033[0m";
+                            cout << "\033[31m " << cell << " \033[0m";
                         }
                         else {
                             cout << "\033[47m " << cell << " \033[0m";

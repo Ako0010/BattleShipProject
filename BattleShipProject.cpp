@@ -5,7 +5,7 @@
 #include <iomanip> // setw() gore istifade
 #include <vector> 
 using namespace std;
-
+ 
 #include "Database.h"
 #include "Board.h"
 #include "Player.h"
